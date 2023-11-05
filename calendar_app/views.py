@@ -15,6 +15,9 @@ def display_calendar(request, year=None, month=None):
     next_month = month + 1 if month < 12 else 1
     next_year = year + 1 if month == 12 else year
 
+    # Calculate the list of timeslots from 09:00 to 21:00
+    timeslots = [str(i).zfill(2) + ":00" for i in range(9, 22)]
+
     if request.method == 'POST':
         form = ReservationForm(request.POST)
         if form.is_valid():
@@ -38,6 +41,7 @@ def display_calendar(request, year=None, month=None):
         'reservations': reservations,
         'form': form,
         'html_calendar': html_calendar,
+        'timeslots': timeslots,
     }
 
     return render(request, 'calendar_app/calendar.html', context)
