@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Calendar</title>
+    <!-- Include Bootstrap CSS from a CDN -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Add some additional custom styling */
+        .date {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Reservation Calendar</h1>
+
+        <div class="d-flex justify-content-between mb-3">
+            <a href="{% url 'calendar_month' year=prev_year month=prev_month %}" class="btn btn-primary">Previous Month</a>
+            <h2>Reservations for {{ year }}/{{ month }}</h2>
+            <a href="{% url 'calendar_month' year=next_year month=next_month %}" class="btn btn-primary">Next Month</a>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.as_p }}
+            </div>
+            <button type="submit" class="btn btn-primary">Make Reservation</button>
+        </form>
+
+        <h2 class="mt-4">Reservations for {{ year }}/{{ month }}</h2>
+        <ul class="list-group">
+            {% for reservation in reservations %}
+                <li class="list-group-item">{{ reservation }}</li>
+            {% endfor %}
+        </ul>
+
+        {{ html_calendar|safe }}
+
+        <script>
+            // Assign values from Django context to JavaScript variables
+            const year = `{{ year|default:"0" }}`;
+            const month = `{{ month|default:"0" }}`;
+            const prev_year = `{{ prev_year|default:"0" }}`;
+            const prev_month = `{{ prev_month|default:"0" }}`;
+            const next_year = `{{ next_year|default:"0" }}`;
+            const next_month = `{{ next_month|default:"0" }}`;
+
+            // Check if year and month are valid, and handle date clicks
+            if (year && month) {
+                const dateLinks = document.querySelectorAll('.date');
+
+                dateLinks.forEach(dateLink => {
+                    dateLink.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        const selectedDate = dateLink.textContent.trim();
+                        // Set the selected date in the reservation form
+                        document.querySelector('#id_date').value = `${year}-${month}-${selectedDate}`;
+                    });
+                });
+            }
+        </script>
+    </div>
+</body>
+</html>
