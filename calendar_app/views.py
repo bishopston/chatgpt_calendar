@@ -3,6 +3,7 @@ from .models import Reservation
 from .forms import ReservationForm
 import datetime
 from .calendar import Calendar
+from django.http import JsonResponse
 
 def display_calendar(request, year=None, month=None):
     if year is None or month is None:
@@ -45,3 +46,12 @@ def display_calendar(request, year=None, month=None):
     }
 
     return render(request, 'calendar_app/calendar.html', context)
+
+
+
+def is_timeslot_reserved(request):
+    if request.method == "POST":
+        date = request.POST.get("date")
+        timeslot = request.POST.get("timeslot")
+        is_reserved = Reservation.objects.filter(date=date, timeslot=timeslot).exists()
+        return JsonResponse({"is_reserved": is_reserved})
