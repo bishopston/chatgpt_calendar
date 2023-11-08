@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Calendar</title>
+    <!-- Include Bootstrap 4 CSS and JavaScript from a CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+    <style>
+        /* Add some additional custom styling */
+        .date {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .reserved {
+            background-color: red;
+            color: white;
+        }
+
+        .past {
+            background-color: gray;
+            color: white;
+        }
+
+        .today {
+            background-color: yellow;
+            color: black;
+        }
+
+        .day {
+            background-color: green;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Reservation Calendar</h1>
+    
+        <div class="d-flex justify-content-between mb-3">
+            <a href="{% url 'calendar_month' year=prev_year month=prev_month %}" class="btn btn-primary">Previous Month</a>
+            <h2>Reservations for {{ year }}/{{ month }}</h2>
+            <a href="{% url 'calendar_month' year=next_year month=next_month %}" class="btn btn-primary">Next Month</a>
+        </div>
+    
+        <table class="calendar">
+            <thead>
+                <tr>
+                    <th class="day">Mon</th>
+                    <th class="day">Tue</th>
+                    <th class="day">Wed</th>
+                    <th class="day">Thu</th>
+                    <th class="day">Fri</th>
+                    <th class="day">Sat</th>
+                    <th class="day">Sun</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in month_days %}
+                    <tr>
+                        {% for day in week %}
+                            <td class="day {% if day.date == today %}today{% endif %} {% if day.is_reserved %}reserved{% else %}available{% endif %}">
+                                {% if day %}
+                                    <span class="date" data-date="{{ day.date|date:'Y-m-d' }}">{{ day.date.day }}</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    
+        <!-- Add your modal and JavaScript here for reservation -->
+    </div>
+    
+    
+    <div class="modal fade" id="reservationModal" tabindex="-1" role="dialog" aria-labelledby="reservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reservationModalLabel">Make a Reservation</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="reservationForm" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" id="js-year" value="{{ year }}">
+                    <input type="hidden" id="js-month" value="{{ month }}">
+                    <input type="hidden" id="id_date" name="date">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="timeslot">Select a Timeslot:</label>
+                            <select class="form-control" name="timeslot" id="timeslot" required>
+                                <option value="" disabled selected>Select a timeslot</option>
+                                {% for timeslot in timeslots %}
+                                    <option value="{{ timeslot }}">{{ timeslot }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="user_name">Your Name:</label>
+                            <input type="text" class="form-control" name="user_name" id="user_name" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Reserve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const dateLinks = document.querySelectorAll('.date');
+        const reservationForm = document.querySelector('#reservationForm');
+        const modal = new bootstrap.Modal(document.getElementById('reservationModal'));
+        const jsYear = document.querySelector('#js-year').value;
+        const jsMonth = document.querySelector('#js-month').value;
+        const timeslotSelect = document.querySelector('#timeslot');
+
+        dateLinks.forEach(dateLink => {
+    dateLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        const selectedDate = dateLink.textContent.trim();
+        const dateInput = document.querySelector('#id_date');
+        if (dateInput) {
+            dateInput.value = `${jsYear}-${jsMonth}-${selectedDate}`;
+        }
+        
+        if (timeslotSelect) {
+            const selectedTimeslot = timeslotSelect.value.trim();
+            if (selectedTimeslot === '' || validateTimeslotFormat(selectedTimeslot)) {
+                // Open the modal form
+                modal.show();
+            } else {
+                alert('Invalid timeslot format. Please use HH:MM format.');
+            }
+        } else {
+            console.error("Elements not found.");
+        }
+                });
+            });
+        });
+</script>

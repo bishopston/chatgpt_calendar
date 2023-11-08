@@ -1,21 +1,29 @@
 from calendar import HTMLCalendar
+from datetime import date
 from .models import Reservation
 
 class Calendar(HTMLCalendar):
-    def __init__(self, year, month):
-        super(Calendar, self).__init__()
+    def __init__(self, year=None, month=None):
         self.year = year
         self.month = month
+        super(Calendar, self).__init__()
 
-    # Format a day as a td
     def formatday(self, day, events):
-        events_per_day = events.filter(date__day=day)
-        d = ""
-        for event in events_per_day:
-            d += f"<li>{event.user_name}</li>"
         if day != 0:
-            return f"<td><span class='date'>{day}</span><ul>{d}</ul></td>"
-        return '<td></td>'
+            cssclass = 'day'
+            today = date.today()
+            reservation_dates = Reservation.objects.filter(date__year=self.year, date__month=self.month)
+            if date(self.year, self.month, day) in [r.date for r in reservation_dates]:
+                cssclass = 'reserved'
+            elif date(self.year, self.month, day) < today:
+                cssclass = 'past'
+            if date(self.year, self.month, day) == today:
+                cssclass = 'today'
+            return self.day_cell(cssclass, day)
+        return self.day_cell('noday', '&nbsp;')
+
+    def day_cell(self, cssclass, day):
+        return f'<td class="{cssclass}">{day}</td>'
 
     # Format a week as a tr
     def formatweek(self, theweek, events):
